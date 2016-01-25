@@ -121,10 +121,7 @@ namespace FacialFeatureDetection
         {
             Matrix<byte> newImage = new Matrix<byte>(grayImage.Size);
             CvInvoke.GaussianBlur(grayImage, newImage, new Size(_weightBlurSize, _weightBlurSize), 0, 0);
-            for (int iRow = 0; iRow < newImage.Rows; iRow++) {
-                for (int iCol = 0; iCol < newImage.Cols; ++iCol)
-                    newImage.Data[iRow, iCol] = Convert.ToByte(255 - newImage.Data[iRow, iCol]);
-            }
+            CvInvoke.BitwiseNot(newImage, newImage);
             return newImage;
         }
 
@@ -309,14 +306,19 @@ namespace FacialFeatureDetection
             ref Point rightEyeCentre
             )
         {
-            Mat grayImage = image.Split()[2];
+            Mat grayImage = new Mat();
+
+            CvInvoke.CvtColor(image, grayImage, Emgu.CV.CvEnum.ColorConversion.Bgr2Gray);
+
+            //normalizes brightness and increases contrast of the image
+            CvInvoke.EqualizeHist(grayImage, grayImage);
 
             // Detect faces
             Rectangle[] faces = _faceCascadeClassifier.DetectMultiScale(
                 grayImage,
                 1.1,
-                2,
-                new Size(150, 150)
+                10,
+                new Size(20, 20)
                 );
 
             if (faces.Length > 0)
